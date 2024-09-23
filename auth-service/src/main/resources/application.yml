@@ -1,7 +1,57 @@
 spring:
   application:
     name: auth-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:defaults}
+  datasource:
+    hikari:
+      #schema: classpath:schema.sql  # Specify SQL file for schema creation
+      pool-name: ProdHikariPool
+      maximum-pool-size: 30
+      minimum-idle: 10
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 20000
+    username: ${SPRING_DATASOURCE_USERNAME:postgres} # Default username
+    password: ${SPRING_DATASOURCE_PASSWORD:root} # Default password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/linereflection}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    properties:
+      hibernate:
+        hbm2ddl:
+          create_namespaces: true
+        jdbc:
+          batch_size: 50
+        default_schema: ${DEFAULT_SCHEMA:auth_service}
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp:
+          use_jdbc_metadata_defaults: false
+        generate_statistics: false
+        order_updates: true
+        format_sql: true
+        show_sql: true
+    open-in-view: false
 
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_HOST:localhost}:${KAFKA_PORT:9092}  # Use Kafka container name instead of localhost
+    consumer:
+      group-id: "auth_service_event_consumer_group"
+      auto-offset-reset: earliest
+      enable-auto-commit: false # Disable auto commit if you want to manually commit
+      max-poll-records: 50 # Number of records per poll
+      fetch-max-wait: 500 # Max time Kafka waits for enough data before returning (in ms)
+      heartbeat-interval: 1000 # Heartbeat interval to ensure the consumer is still alive
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      ack-mode: manual_immediate
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: 3
+      acks: all
 
 server:
   port: 8000
@@ -21,3 +71,44 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+
+
+slack:
+  user:
+    password: slack@123
+
+
+# JWT property
+jwt:
+  secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+  access:
+    token:
+      expirationTimeInHours: 12
+  refresh:
+    token:
+      expirationTimeInDays: 7
+
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
