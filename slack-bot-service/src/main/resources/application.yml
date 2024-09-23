@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: slack-bot-service
+
+server:
+  port: 3050
+  servlet:
+    context-path: /slack-bot
+
+eureka:
+  instance:
+    # prefer-ip-address:  ${EUREKA_INSTANCE_IP_ADDRESS:${spring.cloud.client.hostname}}
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+#    non-secure-port: 3050
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
