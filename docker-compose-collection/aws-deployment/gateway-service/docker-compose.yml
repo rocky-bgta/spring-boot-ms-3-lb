@@ -1,0 +1,19 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+
+  gateway-service:
+    image: salehinrocky/gateway-service:lb3
+    container_name: gateway-service
+    restart: always
+    ports:
+      - "8700:8700"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE= http://172.31.34.90:8761/eureka/
+    networks:
+      - eureka-network
+
+networks:
+  eureka-network:
+    driver: bridge

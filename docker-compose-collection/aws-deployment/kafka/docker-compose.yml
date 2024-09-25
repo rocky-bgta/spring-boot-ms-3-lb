@@ -1,0 +1,75 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+
+  #  kafka:
+  #    image: bitnami/kafka:3.7
+  #    container_name: kafka
+  #    ports:
+  #      - "9092:9092"  # Expose Kafka for external access
+  #      - "9093:9093"  # Expose Controller port
+  #    environment:
+  #      # KRaft settings (no ZooKeeper)
+  #      - KAFKA_CFG_NODE_ID=0
+  #      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+  #      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@localhost:9093
+  #      - KAFKA_KRAFT_CLUSTER_ID=1f3b4a56-7e4a-4a8e-834b-5e12af1c8f93  # Generated Cluster ID
+  #      # JVM heap settings to limit memory usage
+  #      - KAFKA_HEAP_OPTS=-Xms256m -Xmx512m  # Adjust heap size
+  #      # Listeners
+  #      - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+  #      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 #- KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://172.31.34.13:9092
+  #      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+  #      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+  #      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+  #    healthcheck:
+  #      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 10
+  #      start_period: 5s
+  #    mem_limit: 512m  # Limit Kafka to 512MB memory
+  #    cpus: 0.5        # Limit Kafka to use half of the CPU
+  #
+  #    networks:
+  #      - eureka-network
+
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    restart: always
+    environment:
+      KAFKA_BROKER_ID: 1f3b4a56-7e4a-4a8e-834b-5e12af1c8f93  # Auto-assign a broker ID
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092  # Listen on all interfaces for external access
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://172.31.34.13:9092  # Replace <EC2_INSTANCE_PRIVATE_IP> with the private IP of your EC2 instance
+      KAFKA_HEAP_OPTS: -Xms128m -Xmx256m  # Adjust heap size
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    mem_limit: 512m  # Limit Kafka to 512MB memory
+    cpus: 0.5        # Limit Kafka to use half of the CPU
+    networks:
+      - eureka-network
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - eureka-network
+
+networks:
+  eureka-network:
+    driver: bridge

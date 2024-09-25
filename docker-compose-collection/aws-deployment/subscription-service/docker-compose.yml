@@ -1,0 +1,39 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+
+  slack-subscription-service: # Example for another service that needs its own schema
+    #    build:
+    #      context: ../slack-subscription-service/.
+    image: salehinrocky/slack-subscription-service:v1
+    container_name: slack-subscription
+    restart: always
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: "curl --fail --silent http://localhost:4000/subscription/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      #      - SPRING_APPLICATION_NAME = "SLACK-SUBSCRIPTION-SERVICE"
+      - SPRING_PROFILES_ACTIVE=aws
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://loop-star.cr8y6amw4tws.us-east-1.rds.amazonaws.com:5432/linereflection
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=fslUmbYJ6cW1K3Sv8cNL
+      - DEFAULT_SCHEMA=slack_subscription_service  # Schema for another-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://172.31.38.177:8761/eureka/
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+    networks:
+      - eureka-network
+
+networks:
+  eureka-network:
+    driver: bridge

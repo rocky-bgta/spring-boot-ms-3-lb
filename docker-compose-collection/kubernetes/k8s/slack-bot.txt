@@ -1,0 +1,45 @@
+{
+  "family": "slack-bot-service-task",
+  "containerDefinitions": [
+    {
+      "name": "slack-bot-service",
+      "image": "salehinrocky/slack-bot-service:V1",
+      "portMappings": [
+        {
+          "containerPort": 3050,
+          "hostPort": 3050,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "curl --fail --silent http://localhost:3050/slack-bot/actuator/health/readiness | grep UP || exit 1"
+        ],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 10,
+        "startPeriod": 10
+      },
+      "environment": [
+        { "name": "SPRING_APPLICATION_NAME", "value": "SLACK-BOT-SERVICE" },
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "rocky" },
+        { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://postgres-db:5432/linereflection" },
+        { "name": "SPRING_DATASOURCE_USERNAME", "value": "postgres" },
+        { "name": "SPRING_DATASOURCE_PASSWORD", "value": "root" },
+        { "name": "DEFAULT_SCHEMA", "value": "slack_bot_service" },
+        { "name": "DB_CREATION_MODE", "value": "update" },
+        { "name": "SLACK_NGROK_END_POINT", "value": "https://loopstarapi.techsupporta.com" },
+        { "name": "SPRING_KAFKA_HOST", "value": "kafka" },
+        { "name": "EUREKA_DEFAULT_ZONE_URL", "value": "http://registry-service:8761/eureka/" },
+        { "name": "MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE", "value": "*" }
+      ]
+    }
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "executionRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole"
+}

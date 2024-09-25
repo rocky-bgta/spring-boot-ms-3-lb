@@ -1,0 +1,32 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+
+  postgres-db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: linereflection  # Shared database for all services
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]  # PostgreSQL readiness check
+      interval: 10s   # Check every 10 seconds
+      timeout: 5s     # Wait up to 5 seconds for a response
+      retries: 5      # Retry 5 times before marking as unhealthy
+      start_period: 15s  # Wait 15 seconds before starting health checks
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - eureka-network
+
+volumes:
+  postgres-data:
+
+
+networks:
+  eureka-network:
+    driver: bridge

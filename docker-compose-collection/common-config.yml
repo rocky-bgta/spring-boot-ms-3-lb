@@ -1,0 +1,33 @@
+services:
+  networks-config:
+    eureka-network:
+      driver: bridge
+
+  resource-config:
+    extends:
+      service: network-config
+    deploy:
+      resources:
+        limits:
+          memory: 1GB      # Limit memory usage to 1GB
+          cpus: '1.0'      # Limit to 1 CPU core
+        reservations:
+          memory: 512m     # Reserve 512MB memory
+          cpus: '0.5'      # Reserve 0.5 CPU core
+
+  db-config:
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/linereflection
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+
+  health-config:
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+
+  eureka-config:
+    EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://registry-service:8761/eureka/

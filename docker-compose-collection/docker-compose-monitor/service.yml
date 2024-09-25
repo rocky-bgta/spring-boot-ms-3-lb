@@ -1,0 +1,331 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+
+  registry-service:
+#    build:
+#      context: ../../registry-service/.
+    image: salehinrocky/registry-service:V1
+    container_name: registry-service
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8761/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      - SPRING_APPLICATION_NAME=REGISTRY-SERVICE
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+      - SERVER_PORT=8761
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+      - OTEL_SERVICE_NAME = "REGISTRY-SERVICE"
+      - JAVA_TOOL_OPTIONS="-javaagent:/app/libs/opentelemetry-javaagent-1.33.5.jar"
+      - OTEL_EXPORTER_OTLP_ENDPOINT= http://tempo:4317
+      - OTEL_METRICS_EXPORTER= none
+    networks:
+      - eureka-network
+
+  gateway-service:
+#    build:
+#      context: ../../gateway-service/.
+    image: salehinrocky/gateway-service:V1
+    container_name: gateway-service
+    ports:
+      - "8700:8700"
+    environment:
+      - EUREKA_DEFAULT_ZONE_URL= http://registry-service:8761/eureka/
+
+      - SPRING_DATA_REDIS_HOST= redis
+      - SPRING_DATA_REDIS_PORT= 6379
+
+
+      - OTEL_SERVICE_NAME = "GATEWAY-SERVICE"
+      - JAVA_TOOL_OPTIONS="-javaagent:/app/libs/opentelemetry-javaagent-1.33.5.jar"
+      - OTEL_EXPORTER_OTLP_ENDPOINT= http://tempo:4317
+      - OTEL_METRICS_EXPORTER= none
+    depends_on:
+      registry-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      slack-bot-service:
+        condition: service_healthy
+      slack-subscription-service:
+        condition: service_healthy
+      store-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eureka-network
+
+  auth-service:
+#    build:
+#      context: ../../auth-service/.
+    image: salehinrocky/auth-service:V1
+    container_name: auth-service
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8000/auth/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      - SPRING_PROFILES_ACTIVE=rocky
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/linereflection
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - DEFAULT_SCHEMA=auth_service  # Schema for auth-service
+#      - DB_CREATION_MODE=update
+      - SPRING_KAFKA_HOST=kafka
+      - EUREKA_DEFAULT_ZONE_URL=http://registry-service:8761/eureka/
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+      - OTEL_SERVICE_NAME = "AUTH-SERVICE"
+      - JAVA_TOOL_OPTIONS="-javaagent:/app/libs/opentelemetry-javaagent-1.33.5.jar"
+      - OTEL_EXPORTER_OTLP_ENDPOINT= http://tempo:4317
+      - OTEL_METRICS_EXPORTER= none
+
+    depends_on:
+      kafka:
+        condition: service_healthy   # Wait for Kafka to be healthy before starting
+      postgres-db:
+        condition: service_healthy  # Wait for PostgreSQL to be healthy
+      registry-service:
+        condition: service_healthy  # Wait for Registry to be healthy
+    networks:
+      - eureka-network
+
+  slack-bot-service:  # Example for another service that needs its own schema
+#    build:
+#      context: ../../slack-bot-service/.
+    image: salehinrocky/slack-bot-service:V1
+    container_name: slack-bot-service
+    ports:
+      - "3050:3050"
+    healthcheck:
+      test: "curl --fail --silent http://localhost:3050/slack-bot/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 2GB     # Limit memory usage to 2GB
+          cpus: '2.0'      # Limit to 2 CPU core
+        reservations:
+          memory: 712m     # Reserve 712MB memory
+          cpus: '1.0'      # Reserve 1.0 CPU core
+    environment:
+#      - SPRING_APPLICATION_NAME=SLACK-BOT-SERVICE
+      - SPRING_PROFILES_ACTIVE=rocky
+      - SLACK_APP_TOKEN=xapp-1-A07AXBNDSTZ-7371674589287-03c299a17e1f373e51b80c51b64f2921ffc025e63df42c2b3defe7614ad10d62  # Define environment variable here
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/linereflection
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - DEFAULT_SCHEMA=slack-bot-service  # Schema for another-service
+      - DB_CREATION_MODE=update
+      #      - SLACK_NGROK_END_POINT=https://c39d-103-152-237-87.ngrok-free.app
+      - SPRING_KAFKA_HOST=kafka
+      - EUREKA_DEFAULT_ZONE_URL=http://registry-service:8761/eureka/
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+
+      - OTEL_SERVICE_NAME = "SLACK-BOT-SERVICE"
+      - JAVA_TOOL_OPTIONS="-javaagent:/app/libs/opentelemetry-javaagent-1.33.5.jar"
+      - OTEL_EXPORTER_OTLP_ENDPOINT= http://tempo:4317
+      - OTEL_METRICS_EXPORTER= none
+    depends_on:
+      kafka:
+        condition: service_healthy   # Wait for Kafka to be healthy before starting
+      postgres-db:
+        condition: service_healthy  # Wait for PostgreSQL to be healthy
+      registry-service:
+        condition: service_healthy
+    networks:
+      - eureka-network
+
+
+
+  slack-subscription-service: # Example for another service that needs its own schema
+#    build:
+#      context: ../../slack-subscription-service/.
+    image: salehinrocky/slack-subscription-service:V1
+    container_name: slack-subscription
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: "curl --fail --silent http://localhost:4000/subscription/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 700m     # Limit memory usage to 700MB
+          cpus: '1.0'      # Limit to 1 CPU core
+        reservations:
+          memory: 512m     # Reserve 512MB memory
+          cpus: '0.5'      # Reserve 0.5 CPU core
+    environment:
+      #      - SPRING_APPLICATION_NAME = "SLACK-SUBSCRIPTION-SERVICE"
+      - SPRING_PROFILES_ACTIVE=rocky
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/linereflection
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - DEFAULT_SCHEMA=slack_subscription_service  # Schema for another-service
+      - EUREKA_DEFAULT_ZONE_URL=http://registry-service:8761/eureka/
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+      - OTEL_SERVICE_NAME = "SLACK-SUBSCRIPTION-SERVICE"
+      - JAVA_TOOL_OPTIONS="-javaagent:/app/libs/opentelemetry-javaagent-1.33.5.jar"
+      - OTEL_EXPORTER_OTLP_ENDPOINT= http://tempo:4317
+      - OTEL_METRICS_EXPORTER= none
+    depends_on:
+      registry-service:
+        condition: service_healthy
+      postgres-db:
+        condition: service_healthy  # Wait for PostgreSQL to be healthy
+    networks:
+      - eureka-network
+
+  store-service: # Example for another service that needs its own schema
+#    build:
+#      context: ../../store-service/.
+    image: salehinrocky/store-service:V1
+    container_name: store-service
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: "curl --fail --silent http://localhost:5000/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 700m     # Limit memory usage to 700MB
+          cpus: '1.0'      # Limit to 1 CPU core
+        reservations:
+          memory: 512m     # Reserve 512MB memory
+          cpus: '0.5'      # Reserve 0.5 CPU core
+    environment:
+      #      - SPRING_APPLICATION_NAME = "STORE-SERVICE"
+      - SPRING_PROFILES_ACTIVE=rocky
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/linereflection
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root
+      - DEFAULT_SCHEMA=store_service  # Schema for another-service
+      - EUREKA_DEFAULT_ZONE_URL=http://registry-service:8761/eureka/
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+
+      - OTEL_SERVICE_NAME = "STORE-SERVICE"
+      - JAVA_TOOL_OPTIONS="-javaagent:/app/libs/opentelemetry-javaagent-1.33.5.jar"
+      - OTEL_EXPORTER_OTLP_ENDPOINT= http://tempo:4317
+      - OTEL_METRICS_EXPORTER= none
+
+    depends_on:
+      registry-service:
+        condition: service_healthy
+      postgres-db:
+        condition: service_healthy  # Wait for PostgreSQL to be healthy
+    networks:
+      - eureka-network
+
+
+  postgres-db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: linereflection  # Shared database for all services
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]  # PostgreSQL readiness check
+      interval: 10s   # Check every 10 seconds
+      timeout: 5s     # Wait up to 5 seconds for a response
+      retries: 5      # Retry 5 times before marking as unhealthy
+      start_period: 15s  # Wait 15 seconds before starting health checks
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - eureka-network
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    environment:
+      KAFKA_BROKER_ID: -1  # Auto-assign a broker ID
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: [ "CMD", "kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    #    entrypoint: >
+    #      /bin/sh -c '(/opt/kafka/bin/zookeeper-shell.sh zookeeper:2181 rmr /brokers/ids/1 || true) &&
+    #      /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties'
+    networks:
+      - eureka-network
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - eureka-network
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 20s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - eureka-network
+
+
+volumes:
+  postgres-data:
+
+networks:
+  eureka-network:
+    driver: bridge

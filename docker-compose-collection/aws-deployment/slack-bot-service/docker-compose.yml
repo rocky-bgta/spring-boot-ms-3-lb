@@ -1,0 +1,13 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+  slack-bot-service:
+    image: salehinrocky/slack-bot-service:lb
+    container_name: slack-bot-service
+    environment:
+      - SERVER_PORT=3050
+      - EUREKA_INSTANCE_IP_ADDRESS=slack-bot-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://172.31.34.90:8761/eureka/
+    ports:
+      - "3050:3050"

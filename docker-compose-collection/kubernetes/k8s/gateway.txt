@@ -1,0 +1,30 @@
+{
+  "family": "gateway-service-task",
+  "containerDefinitions": [
+    {
+      "name": "gateway-service",
+      "image": "salehinrocky/gateway-service:V1",
+      "portMappings": [
+        {
+          "containerPort": 8700,
+          "hostPort": 8700,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        { "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE", "value": "http://registry-service.euraka:8761/eureka/" },
+        { "name": "SPRING_DATA_REDIS_CONNECT_TIMEOUT", "value": "2s" },
+        { "name": "SPRING_DATA_REDIS_HOST", "value": "redis" },
+        { "name": "SPRING_DATA_REDIS_PORT", "value": "6379" },
+        { "name": "SPRING_DATA_REDIS_TIMEOUT", "value": "1s" }
+      ]
+    }
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "executionRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole"
+}
+gateway-service.euraka-service-namespace

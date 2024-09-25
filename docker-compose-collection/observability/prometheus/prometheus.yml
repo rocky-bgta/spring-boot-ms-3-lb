@@ -1,0 +1,35 @@
+global:
+  scrape_interval:     5s # Set the scrape interval to every 5 seconds.
+  evaluation_interval: 5s # Evaluate rules every 5 seconds.
+
+scrape_configs:
+  - job_name: 'AUTH-SERVICE'
+    metrics_path: '/auth/actuator/prometheus'
+    static_configs:
+      - targets: [ 'auth-service:8000' ]
+
+  - job_name: 'SLACK-BOT-SERVICE'
+    metrics_path: '/slack-bot/actuator/prometheus'
+    static_configs:
+      - targets: [ 'slack-bot-service:3050' ]
+
+  - job_name: 'GATEWAY-SERVICE'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'gateway-service:8700' ]
+
+  - job_name: 'REGISTRY-SERVICE'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'registry-service:8761' ]
+
+  - job_name: 'SLACK-SUBSCRIPTION-SERVICE'
+    metrics_path: '/subscription/actuator/prometheus'
+    static_configs:
+      - targets: [ 'slack-subscription-service:4000' ]
+
+  - job_name: 'STORE-SERVICE'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: [ 'store-service:5000' ]
+  

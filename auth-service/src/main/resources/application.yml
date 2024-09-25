@@ -1,10 +1,8 @@
 spring:
   application:
     name: auth-service
-
-
 server:
-  port: 8000
+  port: ${SERVER_PORT:8000}
   servlet:
     context-path: /auth
 
@@ -14,8 +12,7 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
     lease-renewal-interval-in-seconds: 10  # How often the service renews its lease (heartbeat)
-    lease-expiration-duration-in-seconds: 60  # How long Eureka waits before marking the service as down
-    #non-secure-port: 8000
+    lease-expiration-duration-in-seconds: 120  # How long Eureka waits before marking the service as down
   client:
     register-with-eureka: true
     fetch-registry: true

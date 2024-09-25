@@ -1,0 +1,25 @@
+#version: '3.8'
+#  docker-compose up --build
+#  docker-compose up
+services:
+
+  registry-service:
+    image: salehinrocky/eureka-service:lb
+    container_name: eureka-service
+    restart: always
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+      - SERVER_PORT=8761
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=*
+      - MANAGEMENT_HEALTH_PROBES_ENABLED=true
+      - MANAGEMENT_HEALTH_READINESSSTATE_ENABLED=true
+      - MANAGEMENT_HEALTH_LIVENESSSTATE_ENABLED=true
+    networks:
+      - eureka-network
+
+networks:
+  eureka-network:
+    driver: bridge
