@@ -47,3 +47,7 @@ https://kubernetes.io/docs/concepts/configuration/configmap/
 
 # To deploy a service kubernetes
 kubectl apply -f "yml-file-name"
+
+
+kubectl get replicaset
+kubectl get pods
