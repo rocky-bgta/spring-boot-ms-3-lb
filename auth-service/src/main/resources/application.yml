@@ -11,8 +11,8 @@ eureka:
     # prefer-ip-address:  ${EUREKA_INSTANCE_IP_ADDRESS:${spring.cloud.client.hostname}}
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
-    lease-renewal-interval-in-seconds: 10  # How often the service renews its lease (heartbeat)
-    lease-expiration-duration-in-seconds: 120  # How long Eureka waits before marking the service as down
+    lease-renewal-interval-in-seconds: 30  # How often the service renews its lease (heartbeat)
+    lease-expiration-duration-in-seconds: 90  # How long Eureka waits before marking the service as down
   client:
     register-with-eureka: true
     fetch-registry: true
