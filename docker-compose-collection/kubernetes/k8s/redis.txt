@@ -1,0 +1,57 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:537124932585:task-definition/redis-task:1",
+    "containerDefinitions": [
+        {
+            "name": "redis",
+            "image": "redis:latest",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "redis-6379-tcp",
+                    "containerPort": 6379,
+                    "hostPort": 6379,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "systemControls": []
+        }
+    ],
+    "family": "redis-task",
+    "executionRoleArn": "arn:aws:iam::537124932585:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "revision": 1,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "registeredAt": "2024-09-13T03:44:50.612Z",
+    "registeredBy": "arn:aws:iam::537124932585:root",
+    "tags": []
+}

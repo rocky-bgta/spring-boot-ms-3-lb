@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ers-configmap
+data:
+  SPRING_PROFILES_ACTIVE: "default"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-service:8761/eureka/"
+  EUREKA_APPLICATION_NAME: "eureka-service"
+  AUTH_APPLICATION_NAME: "auth-service"
+  SLACK_BOT_APPLICATION_NAME: "slack-bot-service"
+  GATEWAY_APPLICATION_NAME: "gateway-service"

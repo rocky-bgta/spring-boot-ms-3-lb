@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slack-bot-service-deployment
+  labels:
+    app: slack-bot-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slack-bot-service
+  template:
+    metadata:
+      labels:
+        app: slack-bot-service
+    spec:
+      containers:
+      - name: slack-bot-service
+        image: salehinrocky/slack-bot-service:lb
+        ports:
+        - containerPort: 3050
+        env:
+        - name: SPRING_APPLICATION_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ers-configmap
+              key: SLACK_BOT_APPLICATION_NAME
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom: 
+            configMapKeyRef:
+              name: ers-configmap
+              key: SPRING_PROFILES_ACTIVE
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          valueFrom: 
+            configMapKeyRef:
+              name: ers-configmap
+              key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slack-bot-service
+spec:
+  selector:
+    app: slack-bot-service
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 3050
+      targetPort: 3050
