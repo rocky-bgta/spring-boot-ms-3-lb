@@ -20,9 +20,9 @@ services:
     environment:
       #      - SPRING_APPLICATION_NAME = "SLACK-SUBSCRIPTION-SERVICE"
       - SPRING_PROFILES_ACTIVE=aws
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://loop-star.cr8y6amw4tws.us-east-1.rds.amazonaws.com:5432/linereflection
+      - SPRING_DATASOURCE_URL=
       - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=fslUmbYJ6cW1K3Sv8cNL
+      - SPRING_DATASOURCE_PASSWORD=
       - DEFAULT_SCHEMA=slack_subscription_service  # Schema for another-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://172.31.38.177:8761/eureka/
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
