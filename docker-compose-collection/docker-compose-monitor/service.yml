@@ -132,7 +132,7 @@ services:
     environment:
 #      - SPRING_APPLICATION_NAME=SLACK-BOT-SERVICE
       - SPRING_PROFILES_ACTIVE=rocky
-      - SLACK_APP_TOKEN=xapp-1-A07AXBNDSTZ-7371674589287-03c299a17e1f373e51b80c51b64f2921ffc025e63df42c2b3defe7614ad10d62  # Define environment variable here
+      - SLACK_APP_TOKEN=
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/linereflection
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root
