@@ -19,7 +19,7 @@ helm upgrade ers prod-env
 
 helm uninstall ers
 
-##
+## 
 
 ## Need to read further autoscaling ##
 https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
